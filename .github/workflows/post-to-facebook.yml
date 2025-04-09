@@ -26,8 +26,39 @@ jobs:
           echo "content=$CONTENT" >> $GITHUB_OUTPUT
 
       - name: Post to Facebook
+        id: fb_post
         run: |
-          curl -X POST \
+          # 先驗證權限
+          echo "正在驗證 Facebook 權限..."
+          VERIFY_RESPONSE=$(curl -s -X GET \
+            "https://graph.facebook.com/v16.0/${{ secrets.FB_PAGE_ID }}?fields=access_token&access_token=${{ secrets.FB_ACCESS_TOKEN }}")
+          
+          if echo "$VERIFY_RESPONSE" | grep -q "error"; then
+            echo "權限驗證失敗:"
+            echo "$VERIFY_RESPONSE"
+            exit 1
+          fi
+
+          # 發布文章
+          echo "正在發布文章到 Facebook..."
+          POST_RESPONSE=$(curl -s -X POST \
             "https://graph.facebook.com/v16.0/${{ secrets.FB_PAGE_ID }}/feed" \
-            -d "message=${{ steps.article.outputs.content }}" \
-            -d "access_token=${{ secrets.FB_ACCESS_TOKEN }}"
+            -H "Content-Type: application/json" \
+            -d "{\"message\":\"${{ steps.article.outputs.content }}\", \"access_token\":\"${{ secrets.FB_ACCESS_TOKEN }}\"}")
+
+          if echo "$POST_RESPONSE" | grep -q "error"; then
+            echo "發布失敗:"
+            echo "$POST_RESPONSE"
+            exit 1
+          fi
+
+          echo "發布成功！"
+          echo "$POST_RESPONSE"
+
+      - name: Handle errors
+        if: failure()
+        run: |
+          echo "工作流程失敗。請確認以下事項："
+          echo "1. FB_PAGE_ID 是否正確設定"
+          echo "2. FB_ACCESS_TOKEN 是否具有足夠權限 (需要 pages_read_engagement 和 pages_manage_posts)"
+          echo "3. Access Token 是否過期"
