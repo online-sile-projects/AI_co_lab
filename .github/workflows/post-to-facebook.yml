@@ -25,6 +25,24 @@ jobs:
           CONTENT="${CONTENT//$'\r'/'%0D'}"
           echo "content=$CONTENT" >> $GITHUB_OUTPUT
 
+      - name: Verify Facebook Permissions
+        id: verify_permissions
+        run: |
+          echo "檢查 Facebook Token 權限..."
+          LIST_PAGES=$(curl -s -X GET \
+            "https://graph.facebook.com/v16.0/me/accounts?access_token=${{ secrets.FB_ACCESS_TOKEN }}")
+          
+          echo "你有權限管理的 Pages:"
+          echo "$LIST_PAGES"
+          
+          # 檢查是否包含目標 Page ID
+          if echo "$LIST_PAGES" | jq -e ".data[] | select(.id==\"${{ secrets.FB_PAGE_ID }}\")" > /dev/null; then
+            echo "已找到目標 Page，權限驗證成功！"
+          else
+            echo "錯誤：找不到目標 Page 或沒有足夠權限"
+            exit 1
+          fi
+
       - name: Post to Facebook
         id: fb_post
         run: |
