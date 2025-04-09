@@ -1,3 +1,3 @@
 # Test
 - test
-just test
+just test 2
