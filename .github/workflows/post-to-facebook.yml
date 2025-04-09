@@ -26,8 +26,8 @@ jobs:
           echo "content=$CONTENT" >> $GITHUB_OUTPUT
 
       - name: Post to Facebook
-        uses: facebook-github-actions/post-to-facebook@v1
-        with:
-          page-id: ${{ secrets.FB_PAGE_ID }}
-          access-token: ${{ secrets.FB_ACCESS_TOKEN }}
-          message: ${{ steps.article.outputs.content }}
+        run: |
+          curl -X POST \
+            "https://graph.facebook.com/v16.0/${{ secrets.FB_PAGE_ID }}/feed" \
+            -d "message=${{ steps.article.outputs.content }}" \
+            -d "access_token=${{ secrets.FB_ACCESS_TOKEN }}"
