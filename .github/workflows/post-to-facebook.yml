@@ -46,21 +46,10 @@ jobs:
       - name: Post to Facebook
         id: fb_post
         run: |
-          # 先驗證權限
-          echo "正在驗證 Facebook 權限..."
-          VERIFY_RESPONSE=$(curl -s -X GET \
-            "https://graph.facebook.com/v16.0/${{ secrets.FB_PAGE_ID }}?access_token=${{ secrets.FB_ACCESS_TOKEN }}")
-          
-          if echo "$VERIFY_RESPONSE" | grep -q "error"; then
-            echo "權限驗證失敗:"
-            echo "$VERIFY_RESPONSE"
-            exit 1
-          fi
-
           # 發布文章 - 使用簡化的 API 呼叫
           echo "正在發布文章到 Facebook..."
           POST_RESPONSE=$(curl -s -X POST \
-            "https://graph.facebook.com/v16.0/${{ secrets.FB_PAGE_ID }}/feed" \
+            "https://graph.facebook.com/v22.0/${{ secrets.FB_PAGE_ID }}/feed" \
             -F "message=${{ steps.article.outputs.content }}" \
             -F "access_token=${{ secrets.FB_ACCESS_TOKEN }}")
 
