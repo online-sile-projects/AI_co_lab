@@ -1,0 +1,27 @@
+name: Post to Facebook Page
+
+on:
+  push:
+    paths:
+      - 'articles/**'  # 當 articles 資料夾有變更時觸發
+  workflow_dispatch:   # 允許手動觸發
+
+jobs:
+  post-to-facebook:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Read article content
+        id: article
+        run: |
+          # 讀取最新的文章內容
+          CONTENT=$(cat ${{ github.event.inputs.article_path || 'articles/latest.md' }})
+          echo "::set-output name=content::$CONTENT"
+
+      - name: Post to Facebook
+        uses: facebook-github-actions/post-to-facebook@v1
+        with:
+          page-id: ${{ secrets.FB_PAGE_ID }}
+          access-token: ${{ secrets.FB_ACCESS_TOKEN }}
+          message: ${{ steps.article.outputs.content }}
