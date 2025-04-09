@@ -15,9 +15,15 @@ jobs:
       - name: Read article content
         id: article
         run: |
-          # 讀取最新的文章內容
-          CONTENT=$(cat ${{ github.event.inputs.article_path || 'articles/latest.md' }})
-          echo "::set-output name=content::$CONTENT"
+          # 找出 articles 目錄下最新修改的 .md 檔案
+          LATEST_ARTICLE=$(find articles -name "*.md" -type f -printf '%T@ %p\n' | sort -n | tail -1 | cut -f2- -d" ")
+          # 讀取文章內容
+          CONTENT=$(cat "$LATEST_ARTICLE")
+          # 將內容轉換為可在 GitHub Actions 中傳遞的格式
+          CONTENT="${CONTENT//'%'/'%25'}"
+          CONTENT="${CONTENT//$'\n'/'%0A'}"
+          CONTENT="${CONTENT//$'\r'/'%0D'}"
+          echo "content=$CONTENT" >> $GITHUB_OUTPUT
 
       - name: Post to Facebook
         uses: facebook-github-actions/post-to-facebook@v1
